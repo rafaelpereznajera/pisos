@@ -1,6 +1,31 @@
+export async function createPaymentForLease(input: {
+  lease_id: string
+  amount: number
+  billing_month: string
+  is_paid: boolean
+  payment_date: string | null
+}): Promise<Payment> {
+  const { data, error } = await supabase
+    .from('payments')
+    .insert({
+      lease_id: input.lease_id,
+      amount: input.amount,
+      billing_month: input.billing_month,
+      is_paid: input.is_paid,
+      payment_date: input.payment_date,
+    })
+    .select('id, lease_id, billing_month, amount, is_paid, payment_date')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
 import { supabase } from '../../lib/supabase'
 
-type Payment = {
+export type Payment = {
   id: string
   lease_id: string
   billing_month: string
@@ -70,4 +95,18 @@ export async function createCurrentMonthPaymentForLease(leaseId: string, amount:
   }
 
   return data
+}
+
+export async function listPaymentsByLeaseId(leaseId: string): Promise<Payment[]> {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, lease_id, billing_month, amount, is_paid, payment_date')
+    .eq('lease_id', leaseId)
+    .order('billing_month', { ascending: false })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data ?? []
 }

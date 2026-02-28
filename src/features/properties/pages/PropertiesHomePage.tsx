@@ -163,6 +163,12 @@ export function PropertiesHomePage() {
         <>
           <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
           <span className="text-xs text-emerald-700">Pagado: {payment.amount} €</span>
+          <Link
+            to={`/leases/${assignment.lease_id}/payments`}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            Historial
+          </Link>
         </>
       )
     }
@@ -178,6 +184,12 @@ export function PropertiesHomePage() {
         >
           {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pagado'}
         </button>
+        <Link
+          to={`/leases/${assignment.lease_id}/payments`}
+          className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          Historial
+        </Link>
       </>
     )
   }
@@ -228,9 +240,11 @@ export function PropertiesHomePage() {
               <li key={property.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-medium text-slate-900">{property.address}</p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
+                    <p className="flex flex-wrap items-baseline gap-2">
+                      <span className="text-2xl font-medium text-slate-900">{property.address}</span>
+                      <span className="text-xs font-normal text-slate-600">
+                        {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
+                      </span>
                     </p>
 
                     {property.rental_mode === 'entire_property' &&

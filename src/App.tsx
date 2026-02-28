@@ -6,6 +6,8 @@ import { PropertiesHomePage } from './features/properties/pages/PropertiesHomePa
 import { NewPropertyPage } from './features/properties/pages/NewPropertyPage'
 import { EditLeasePage } from './features/leases/pages/EditLeasePage'
 import { NewLeasePage } from './features/leases/pages/NewLeasePage'
+import { LeasePaymentsHistoryPage } from './features/payments/pages/LeasePaymentsHistoryPage'
+import { AddPaymentPage } from './features/payments/pages/AddPaymentPage'
 import { EditTenantPage } from './features/tenants/pages/EditTenantPage'
 import { NewTenantPage } from './features/tenants/pages/NewTenantPage'
 import { TenantsListPage } from './features/tenants/pages/TenantsListPage'
@@ -23,6 +25,8 @@ function App() {
       <Route path="/tenants/:tenantId/edit" element={<EditTenantPage />} />
       <Route path="/leases/new" element={<NewLeasePage />} />
       <Route path="/leases/:leaseId/edit" element={<EditLeasePage />} />
+      <Route path="/leases/:leaseId/payments" element={<LeasePaymentsHistoryPage />} />
+      <Route path="/leases/:leaseId/payments/new" element={<AddPaymentPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
