@@ -145,10 +145,15 @@ export function PropertiesHomePage() {
                     <p className="font-medium text-slate-900">{property.address}</p>
                     <p className="mt-1 text-sm text-slate-600">
                       {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
-                      {activeLeaseByPropertyId[property.id] && !isLoadingLeases
-                        ? ` · ${formatTenant(activeLeaseByPropertyId[property.id])}`
-                        : ''}
                     </p>
+
+                    {property.rental_mode === 'entire_property' &&
+                      activeLeaseByPropertyId[property.id] &&
+                      !isLoadingLeases && (
+                        <p className="mt-1 text-sm text-slate-600">
+                          {formatTenant(activeLeaseByPropertyId[property.id])}
+                        </p>
+                      )}
 
                     {property.rental_mode === 'by_room' && (
                       <div className="mt-3">
