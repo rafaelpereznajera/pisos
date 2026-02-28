@@ -4,6 +4,7 @@ import { EditRoomPage } from './features/properties/pages/EditRoomPage'
 import { NewRoomPage } from './features/properties/pages/NewRoomPage'
 import { PropertiesHomePage } from './features/properties/pages/PropertiesHomePage'
 import { NewPropertyPage } from './features/properties/pages/NewPropertyPage'
+import { EditLeasePage } from './features/leases/pages/EditLeasePage'
 import { NewLeasePage } from './features/leases/pages/NewLeasePage'
 import { EditTenantPage } from './features/tenants/pages/EditTenantPage'
 import { NewTenantPage } from './features/tenants/pages/NewTenantPage'
@@ -21,6 +22,7 @@ function App() {
       <Route path="/tenants/new" element={<NewTenantPage />} />
       <Route path="/tenants/:tenantId/edit" element={<EditTenantPage />} />
       <Route path="/leases/new" element={<NewLeasePage />} />
+      <Route path="/leases/:leaseId/edit" element={<EditLeasePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
