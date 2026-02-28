@@ -1,3 +1,27 @@
+export async function updatePayment(paymentId: string, input: {
+  amount: number
+  billing_month: string
+  is_paid: boolean
+  payment_date: string | null
+}): Promise<Payment> {
+  const { data, error } = await supabase
+    .from('payments')
+    .update({
+      amount: input.amount,
+      billing_month: input.billing_month,
+      is_paid: input.is_paid,
+      payment_date: input.payment_date,
+    })
+    .eq('id', paymentId)
+    .select('id, lease_id, billing_month, amount, is_paid, payment_date')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
 export async function createPaymentForLease(input: {
   lease_id: string
   amount: number

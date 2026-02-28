@@ -27,6 +27,7 @@ function App() {
       <Route path="/leases/:leaseId/edit" element={<EditLeasePage />} />
       <Route path="/leases/:leaseId/payments" element={<LeasePaymentsHistoryPage />} />
       <Route path="/leases/:leaseId/payments/new" element={<AddPaymentPage />} />
+      <Route path="/leases/:leaseId/payments/:paymentId/edit" element={<AddPaymentPage editMode={true} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

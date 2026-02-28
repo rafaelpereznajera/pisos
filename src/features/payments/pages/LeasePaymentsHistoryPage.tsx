@@ -91,9 +91,19 @@ export function LeasePaymentsHistoryPage() {
             {payments.map((payment) => (
               <li key={payment.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-2 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between">
-                  <p>Mes: {formatBillingMonth(payment.billing_month)}</p>
-                  <p>Importe: {payment.amount} €</p>
-                  <p>{payment.is_paid ? `Pagado · ${payment.payment_date || 'Sin fecha'}` : 'Pendiente'}</p>
+                  <div className="flex flex-col gap-1">
+                    <p>Mes: {formatBillingMonth(payment.billing_month)}</p>
+                    <p>Importe: {payment.amount} €</p>
+                    <p>{payment.is_paid ? `Pagado · ${payment.payment_date || 'Sin fecha'}` : 'Pendiente'}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/leases/${payment.lease_id}/payments/${payment.id}/edit`}
+                      className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Editar
+                    </Link>
+                  </div>
                 </div>
               </li>
             ))}

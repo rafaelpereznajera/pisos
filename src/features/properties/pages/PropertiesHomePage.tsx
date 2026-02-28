@@ -182,7 +182,7 @@ export function PropertiesHomePage() {
           disabled={creatingPaymentLeaseId === assignment.lease_id}
           className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pagado'}
+          {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pago verificado'}
         </button>
         <Link
           to={`/leases/${assignment.lease_id}/payments`}
