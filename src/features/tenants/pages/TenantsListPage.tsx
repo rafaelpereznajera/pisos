@@ -97,10 +97,9 @@ export function TenantsListPage() {
               <li key={tenant.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-medium text-slate-900">{tenant.full_name}</p>
-                    <p className="mt-1 text-sm text-slate-600">DNI/NIE: {tenant.document_id}</p>
-                    <p className="mt-1 text-sm text-slate-600">Teléfono: {tenant.phone || '—'}</p>
-                    <p className="mt-1 text-sm text-slate-600">Email: {tenant.email || '—'}</p>
+                    <p className="font-medium text-slate-900">
+                      {tenant.full_name} - {tenant.phone || '—'}
+                    </p>
 
                     <div className="mt-3">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Contratos</p>
