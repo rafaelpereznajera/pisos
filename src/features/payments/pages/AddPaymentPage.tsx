@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { createPaymentForLease, updatePayment, type Payment } from '../api'
+import { createPaymentForLease, updatePayment } from '../api'
 
 export function AddPaymentPage({ editMode }: { editMode?: boolean }) {
   const { leaseId, paymentId } = useParams<{ leaseId: string; paymentId?: string }>()

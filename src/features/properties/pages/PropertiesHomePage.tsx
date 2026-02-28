@@ -151,48 +151,7 @@ export function PropertiesHomePage() {
     return `${assignment.tenant_name} (${assignment.tenant_phone || '—'})`
   }
 
-  function renderPaymentAction(assignment: ActiveLeaseAssignment | undefined) {
-    if (!assignment) {
-      return null
-    }
 
-    const payment = paymentsByLeaseId[assignment.lease_id]
-
-    if (payment) {
-      return (
-        <>
-          <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
-          <span className="text-xs text-emerald-700">Pagado: {payment.amount} €</span>
-          <Link
-            to={`/leases/${assignment.lease_id}/payments`}
-            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            Historial
-          </Link>
-        </>
-      )
-    }
-
-    return (
-      <>
-        <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
-        <button
-          type="button"
-          onClick={() => handleMarkPaid(assignment)}
-          disabled={creatingPaymentLeaseId === assignment.lease_id}
-          className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pago verificado'}
-        </button>
-        <Link
-          to={`/leases/${assignment.lease_id}/payments`}
-          className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          Historial
-        </Link>
-      </>
-    )
-  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-10 sm:px-6 lg:px-8">
@@ -239,20 +198,62 @@ export function PropertiesHomePage() {
             {properties.map((property) => (
               <li key={property.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-2xl font-medium text-slate-900">{property.address}</span>
-                      <span className="text-xs font-normal text-slate-600">
-                        {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
-                      </span>
-                    </p>
+                  <div className='w-full'>
+                    <div className="flex flex-wrap w-full items-baseline gap-2 justify-between">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <span className="text-2xl font-medium text-slate-900">{property.address}</span>
+                        <span className="text-xs font-normal text-slate-600">
+                          {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
+                        </span>
+                      </div>
+                      <Link
+                        to={`/properties/${property.id}/edit`}
+                        className="inline-flex items-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Editar
+                      </Link>
+                    </div>
 
                     {property.rental_mode === 'entire_property' &&
                       activeLeaseByPropertyId[property.id] &&
                       !isLoadingLeases && (
-                        <div className="mt-1 flex items-center gap-2">
-                          <p className="text-sm text-slate-600">{formatTenant(activeLeaseByPropertyId[property.id])}</p>
-                          {renderPaymentAction(activeLeaseByPropertyId[property.id])}
+                        <div className="border-t border-slate-200 pt-2 mt-3 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg text-slate-600">{formatTenant(activeLeaseByPropertyId[property.id])}</p>
+                            {/* Acciones de pago menos el historial */}
+                            {(() => {
+                              const assignment = activeLeaseByPropertyId[property.id];
+                              if (!assignment) return null;
+                              const payment = paymentsByLeaseId[assignment.lease_id];
+                              if (payment) {
+                                return (
+                                  <>
+                                    <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
+                                    <span className="text-xs text-emerald-700">Pagado: {payment.amount} €</span>
+                                  </>
+                                );
+                              }
+                              return (
+                                <>
+                                  <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkPaid(assignment)}
+                                    disabled={creatingPaymentLeaseId === assignment.lease_id}
+                                    className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pago verificado'}
+                                  </button>
+                                </>
+                              );
+                            })()}
+                          </div>
+                          <Link
+                            to={`/leases/${activeLeaseByPropertyId[property.id]?.lease_id}/payments`}
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                          >
+                            Historial
+                          </Link>
                         </div>
                       )}
 
@@ -269,14 +270,50 @@ export function PropertiesHomePage() {
                         {!isLoadingRooms && (roomsByPropertyId[property.id]?.length ?? 0) > 0 && (
                           <ul className="mt-2 space-y-1">
                             {roomsByPropertyId[property.id].map((room) => (
-                              <li key={room.id} className="text-sm text-slate-700">
-                                <div className="flex items-center gap-2">
-                                  <span>- {room.name}</span>
+                              <li key={room.id} className="text-lg text-slate-700">
+                                <div className="border-t border-slate-200 pt-2 mt-3 flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span>- {room.name}</span>
+                                    {activeLeaseByRoomId[room.id] && !isLoadingLeases && (
+                                      <>
+                                        <span>· {formatTenant(activeLeaseByRoomId[room.id])}</span>
+                                        {/* Acciones de pago menos el historial */}
+                                        {(() => {
+                                          const assignment = activeLeaseByRoomId[room.id];
+                                          if (!assignment) return null;
+                                          const payment = paymentsByLeaseId[assignment.lease_id];
+                                          if (payment) {
+                                            return (
+                                              <>
+                                                <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
+                                                <span className="text-xs text-emerald-700">Pagado: {payment.amount} €</span>
+                                              </>
+                                            );
+                                          }
+                                          return (
+                                            <>
+                                              <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleMarkPaid(assignment)}
+                                                disabled={creatingPaymentLeaseId === assignment.lease_id}
+                                                className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                              >
+                                                {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pago verificado'}
+                                              </button>
+                                            </>
+                                          );
+                                        })()}
+                                      </>
+                                    )}
+                                  </div>
                                   {activeLeaseByRoomId[room.id] && !isLoadingLeases && (
-                                    <>
-                                      <span>· {formatTenant(activeLeaseByRoomId[room.id])}</span>
-                                      {renderPaymentAction(activeLeaseByRoomId[room.id])}
-                                    </>
+                                    <Link
+                                      to={`/leases/${activeLeaseByRoomId[room.id].lease_id}/payments`}
+                                      className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                                    >
+                                      Historial
+                                    </Link>
                                   )}
                                 </div>
                               </li>
@@ -286,12 +323,7 @@ export function PropertiesHomePage() {
                       </div>
                     )}
                   </div>
-                  <Link
-                    to={`/properties/${property.id}/edit`}
-                    className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                  >
-                    Editar
-                  </Link>
+
                 </div>
               </li>
             ))}
