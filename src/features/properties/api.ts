@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import type { Property, RentalMode } from './types'
+import type { Property, RentalMode, Room } from './types'
 
 type CreatePropertyInput = {
   address: string
@@ -11,6 +11,15 @@ type UpdatePropertyInput = {
   address: string
   bedroom_count: number
   rental_mode: RentalMode
+}
+
+type CreateRoomInput = {
+  property_id: string
+  name: string
+}
+
+type UpdateRoomInput = {
+  name: string
 }
 
 export async function listProperties(): Promise<Property[]> {
@@ -71,6 +80,73 @@ export async function updateProperty(id: string, input: UpdatePropertyInput): Pr
 
 export async function deleteProperty(id: string): Promise<void> {
   const { error } = await supabase.from('properties').delete().eq('id', id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function listRoomsByProperty(propertyId: string): Promise<Room[]> {
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('id, property_id, name, created_at')
+    .eq('property_id', propertyId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data ?? []
+}
+
+export async function createRoom(input: CreateRoomInput): Promise<Room> {
+  const { data, error } = await supabase
+    .from('rooms')
+    .insert(input)
+    .select('id, property_id, name, created_at')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+export async function getRoomById(propertyId: string, roomId: string): Promise<Room> {
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('id, property_id, name, created_at')
+    .eq('property_id', propertyId)
+    .eq('id', roomId)
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+export async function updateRoom(propertyId: string, roomId: string, input: UpdateRoomInput): Promise<Room> {
+  const { data, error } = await supabase
+    .from('rooms')
+    .update(input)
+    .eq('property_id', propertyId)
+    .eq('id', roomId)
+    .select('id, property_id, name, created_at')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+export async function deleteRoom(propertyId: string, roomId: string): Promise<void> {
+  const { error } = await supabase.from('rooms').delete().eq('property_id', propertyId).eq('id', roomId)
 
   if (error) {
     throw new Error(error.message)

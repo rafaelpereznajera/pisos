@@ -7,3 +7,10 @@ export type Property = {
   rental_mode: RentalMode
   created_at: string
 }
+
+export type Room = {
+  id: string
+  property_id: string
+  name: string
+  created_at: string
+}

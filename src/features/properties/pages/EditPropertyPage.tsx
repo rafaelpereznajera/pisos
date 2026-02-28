@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteProperty, getPropertyById, updateProperty } from '../api'
-import type { RentalMode } from '../types'
+import { deleteProperty, getPropertyById, listRoomsByProperty, updateProperty } from '../api'
+import type { RentalMode, Room } from '../types'
 
 export function EditPropertyPage() {
   const navigate = useNavigate()
@@ -9,7 +9,9 @@ export function EditPropertyPage() {
   const [address, setAddress] = useState('')
   const [bedroomCount, setBedroomCount] = useState('1')
   const [rentalMode, setRentalMode] = useState<RentalMode>('entire_property')
+  const [rooms, setRooms] = useState<Room[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +39,28 @@ export function EditPropertyPage() {
 
     void loadProperty()
   }, [propertyId])
+
+  useEffect(() => {
+    async function loadRooms() {
+      if (!propertyId || rentalMode !== 'by_room') {
+        setRooms([])
+        return
+      }
+
+      try {
+        setIsLoadingRooms(true)
+        const roomData = await listRoomsByProperty(propertyId)
+        setRooms(roomData)
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : 'Error desconocido'
+        setError(message)
+      } finally {
+        setIsLoadingRooms(false)
+      }
+    }
+
+    void loadRooms()
+  }, [propertyId, rentalMode])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -163,6 +187,45 @@ export function EditPropertyPage() {
               <option value="by_room">Por habitaciones</option>
             </select>
           </div>
+
+          {rentalMode === 'by_room' && propertyId && (
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-sm font-semibold text-slate-900">Habitaciones</h2>
+                <Link
+                  to={`/properties/${propertyId}/rooms/new`}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                >
+                  Añadir habitación
+                </Link>
+              </div>
+
+              {isLoadingRooms && <p className="text-sm text-slate-600">Cargando habitaciones...</p>}
+
+              {!isLoadingRooms && rooms.length === 0 && (
+                <p className="text-sm text-slate-600">No hay habitaciones todavía.</p>
+              )}
+
+              {!isLoadingRooms && rooms.length > 0 && (
+                <ul className="space-y-2">
+                  {rooms.map((room) => (
+                    <li
+                      key={room.id}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+                    >
+                      <span className="text-sm text-slate-800">{room.name}</span>
+                      <Link
+                        to={`/properties/${propertyId}/rooms/${room.id}/edit`}
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Editar / Borrar
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
