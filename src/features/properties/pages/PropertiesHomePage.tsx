@@ -14,7 +14,7 @@ export function PropertiesHomePage() {
         const data = await listProperties()
         setProperties(data)
       } catch (loadError) {
-        const message = loadError instanceof Error ? loadError.message : 'Unknown error'
+        const message = loadError instanceof Error ? loadError.message : 'Error desconocido'
         setError(message)
       } finally {
         setIsLoading(false)
@@ -29,20 +29,20 @@ export function PropertiesHomePage() {
       <section className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Rental Property Manager</h1>
-            <p className="mt-1 text-sm text-slate-600">Manage your rental portfolio in one place.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Gestor de Pisos de Alquiler</h1>
+            <p className="mt-1 text-sm text-slate-600">Gestiona tu cartera de alquileres en un solo lugar.</p>
           </div>
           <Link
             to="/properties/new"
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
           >
-            Add property
+            Añadir piso
           </Link>
         </div>
 
         {isLoading && (
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-            Loading properties...
+            Cargando pisos...
           </div>
         )}
 
@@ -52,7 +52,7 @@ export function PropertiesHomePage() {
 
         {!isLoading && !error && properties.length === 0 && (
           <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">
-            No properties yet.
+            Todavía no hay pisos.
           </div>
         )}
 
@@ -60,10 +60,20 @@ export function PropertiesHomePage() {
           <ul className="grid gap-3">
             {properties.map((property) => (
               <li key={property.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="font-medium text-slate-900">{property.address}</p>
-                <p className="mt-1 text-sm text-slate-600">
-                  {property.bedroom_count} bedrooms · {property.rental_mode === 'by_room' ? 'By room' : 'Entire property'}
-                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="font-medium text-slate-900">{property.address}</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/properties/${property.id}/edit`}
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  >
+                    Editar
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>
