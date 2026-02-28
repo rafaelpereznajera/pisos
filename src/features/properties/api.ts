@@ -100,6 +100,34 @@ export async function listRoomsByProperty(propertyId: string): Promise<Room[]> {
   return data ?? []
 }
 
+export async function listRoomsByPropertyIds(propertyIds: string[]): Promise<Record<string, Room[]>> {
+  if (propertyIds.length === 0) {
+    return {}
+  }
+
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('id, property_id, name, created_at')
+    .in('property_id', propertyIds)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const roomsByPropertyId: Record<string, Room[]> = {}
+
+  for (const room of data ?? []) {
+    if (!roomsByPropertyId[room.property_id]) {
+      roomsByPropertyId[room.property_id] = []
+    }
+
+    roomsByPropertyId[room.property_id].push(room)
+  }
+
+  return roomsByPropertyId
+}
+
 export async function createRoom(input: CreateRoomInput): Promise<Room> {
   const { data, error } = await supabase
     .from('rooms')

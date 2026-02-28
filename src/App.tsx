@@ -4,6 +4,10 @@ import { EditRoomPage } from './features/properties/pages/EditRoomPage'
 import { NewRoomPage } from './features/properties/pages/NewRoomPage'
 import { PropertiesHomePage } from './features/properties/pages/PropertiesHomePage'
 import { NewPropertyPage } from './features/properties/pages/NewPropertyPage'
+import { NewLeasePage } from './features/leases/pages/NewLeasePage'
+import { EditTenantPage } from './features/tenants/pages/EditTenantPage'
+import { NewTenantPage } from './features/tenants/pages/NewTenantPage'
+import { TenantsListPage } from './features/tenants/pages/TenantsListPage'
 
 function App() {
   return (
@@ -13,6 +17,10 @@ function App() {
       <Route path="/properties/:propertyId/edit" element={<EditPropertyPage />} />
       <Route path="/properties/:propertyId/rooms/new" element={<NewRoomPage />} />
       <Route path="/properties/:propertyId/rooms/:roomId/edit" element={<EditRoomPage />} />
+      <Route path="/tenants" element={<TenantsListPage />} />
+      <Route path="/tenants/new" element={<NewTenantPage />} />
+      <Route path="/tenants/:tenantId/edit" element={<EditTenantPage />} />
+      <Route path="/leases/new" element={<NewLeasePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

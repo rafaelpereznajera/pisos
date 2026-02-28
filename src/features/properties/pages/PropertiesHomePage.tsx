@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { listProperties } from '../api'
-import type { Property } from '../types'
+import { listProperties, listRoomsByPropertyIds } from '../api'
+import type { Property, Room } from '../types'
 
 export function PropertiesHomePage() {
   const [properties, setProperties] = useState<Property[]>([])
+  const [roomsByPropertyId, setRoomsByPropertyId] = useState<Record<string, Room[]>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -24,6 +26,32 @@ export function PropertiesHomePage() {
     void loadProperties()
   }, [])
 
+  useEffect(() => {
+    async function loadRooms() {
+      const byRoomPropertyIds = properties
+        .filter((property) => property.rental_mode === 'by_room')
+        .map((property) => property.id)
+
+      if (byRoomPropertyIds.length === 0) {
+        setRoomsByPropertyId({})
+        return
+      }
+
+      try {
+        setIsLoadingRooms(true)
+        const groupedRooms = await listRoomsByPropertyIds(byRoomPropertyIds)
+        setRoomsByPropertyId(groupedRooms)
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : 'Error desconocido'
+        setError(message)
+      } finally {
+        setIsLoadingRooms(false)
+      }
+    }
+
+    void loadRooms()
+  }, [properties])
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-10 sm:px-6 lg:px-8">
       <section className="space-y-6">
@@ -32,12 +60,20 @@ export function PropertiesHomePage() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Gestor de Pisos de Alquiler</h1>
             <p className="mt-1 text-sm text-slate-600">Gestiona tu cartera de alquileres en un solo lugar.</p>
           </div>
-          <Link
-            to="/properties/new"
-            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
-          >
-            Añadir piso
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/tenants"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              Inquilinos
+            </Link>
+            <Link
+              to="/properties/new"
+              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            >
+              Añadir piso
+            </Link>
+          </div>
         </div>
 
         {isLoading && (
@@ -66,6 +102,28 @@ export function PropertiesHomePage() {
                     <p className="mt-1 text-sm text-slate-600">
                       {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
                     </p>
+
+                    {property.rental_mode === 'by_room' && (
+                      <div className="mt-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Habitaciones</p>
+
+                        {isLoadingRooms && <p className="mt-1 text-sm text-slate-500">Cargando habitaciones...</p>}
+
+                        {!isLoadingRooms && (roomsByPropertyId[property.id]?.length ?? 0) === 0 && (
+                          <p className="mt-1 text-sm text-slate-500">Sin habitaciones.</p>
+                        )}
+
+                        {!isLoadingRooms && (roomsByPropertyId[property.id]?.length ?? 0) > 0 && (
+                          <ul className="mt-2 space-y-1">
+                            {roomsByPropertyId[property.id].map((room) => (
+                              <li key={room.id} className="text-sm text-slate-700">
+                                - {room.name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <Link
                     to={`/properties/${property.id}/edit`}
