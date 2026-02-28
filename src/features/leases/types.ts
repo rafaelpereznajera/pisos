@@ -29,3 +29,11 @@ export type UpdateLeaseInput = {
   monthly_rent: number
   is_active: boolean
 }
+
+export type ActiveLeaseAssignment = {
+  lease_id: string
+  tenant_name: string
+  tenant_phone: string | null
+  property_id: string | null
+  room_id: string | null
+}

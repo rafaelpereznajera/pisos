@@ -157,6 +157,20 @@ export async function getRoomById(propertyId: string, roomId: string): Promise<R
   return data
 }
 
+export async function getRoomByIdOnly(roomId: string): Promise<Room> {
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('id, property_id, name, created_at')
+    .eq('id', roomId)
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
 export async function updateRoom(propertyId: string, roomId: string, input: UpdateRoomInput): Promise<Room> {
   const { data, error } = await supabase
     .from('rooms')

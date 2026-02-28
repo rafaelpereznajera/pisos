@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { listActiveLeaseAssignmentsByAssets } from '../../leases/api'
+import type { ActiveLeaseAssignment } from '../../leases/types'
 import { listProperties, listRoomsByPropertyIds } from '../api'
 import type { Property, Room } from '../types'
 
 export function PropertiesHomePage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [roomsByPropertyId, setRoomsByPropertyId] = useState<Record<string, Room[]>>({})
+  const [activeLeaseByPropertyId, setActiveLeaseByPropertyId] = useState<
+    Record<string, ActiveLeaseAssignment>
+  >({})
+  const [activeLeaseByRoomId, setActiveLeaseByRoomId] = useState<Record<string, ActiveLeaseAssignment>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingRooms, setIsLoadingRooms] = useState(false)
+  const [isLoadingLeases, setIsLoadingLeases] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -51,6 +58,43 @@ export function PropertiesHomePage() {
 
     void loadRooms()
   }, [properties])
+
+  useEffect(() => {
+    async function loadActiveLeases() {
+      if (properties.length === 0) {
+        setActiveLeaseByPropertyId({})
+        setActiveLeaseByRoomId({})
+        return
+      }
+
+      const propertyIds = properties.map((property) => property.id)
+      const roomIds = Object.values(roomsByPropertyId)
+        .flat()
+        .map((room) => room.id)
+
+      try {
+        setIsLoadingLeases(true)
+        const assignments = await listActiveLeaseAssignmentsByAssets(propertyIds, roomIds)
+        setActiveLeaseByPropertyId(assignments.byPropertyId)
+        setActiveLeaseByRoomId(assignments.byRoomId)
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : 'Error desconocido'
+        setError(message)
+      } finally {
+        setIsLoadingLeases(false)
+      }
+    }
+
+    void loadActiveLeases()
+  }, [properties, roomsByPropertyId])
+
+  function formatTenant(assignment: ActiveLeaseAssignment | undefined): string {
+    if (!assignment) {
+      return ''
+    }
+
+    return `${assignment.tenant_name} (${assignment.tenant_phone || '—'})`
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-10 sm:px-6 lg:px-8">
@@ -101,6 +145,9 @@ export function PropertiesHomePage() {
                     <p className="font-medium text-slate-900">{property.address}</p>
                     <p className="mt-1 text-sm text-slate-600">
                       {property.bedroom_count} habitaciones · {property.rental_mode === 'by_room' ? 'Por habitaciones' : 'Piso completo'}
+                      {activeLeaseByPropertyId[property.id] && !isLoadingLeases
+                        ? ` · ${formatTenant(activeLeaseByPropertyId[property.id])}`
+                        : ''}
                     </p>
 
                     {property.rental_mode === 'by_room' && (
@@ -118,6 +165,9 @@ export function PropertiesHomePage() {
                             {roomsByPropertyId[property.id].map((room) => (
                               <li key={room.id} className="text-sm text-slate-700">
                                 - {room.name}
+                                {activeLeaseByRoomId[room.id] && !isLoadingLeases
+                                  ? ` · ${formatTenant(activeLeaseByRoomId[room.id])}`
+                                  : ''}
                               </li>
                             ))}
                           </ul>

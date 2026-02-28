@@ -1,13 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getLeaseById, updateLease } from '../api'
+import { getPropertyById, getRoomByIdOnly } from '../../properties/api'
+import { getTenantById } from '../../tenants/api'
 
 export function EditLeasePage() {
   const navigate = useNavigate()
   const { leaseId } = useParams<{ leaseId: string }>()
-  const [tenantId, setTenantId] = useState('')
-  const [propertyId, setPropertyId] = useState<string | null>(null)
-  const [roomId, setRoomId] = useState<string | null>(null)
+  const [tenantLabel, setTenantLabel] = useState('—')
+  const [assignmentLabel, setAssignmentLabel] = useState('—')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [monthlyRent, setMonthlyRent] = useState('')
@@ -27,14 +28,24 @@ export function EditLeasePage() {
 
       try {
         const lease = await getLeaseById(leaseId)
-        setTenantId(lease.tenant_id)
-        setPropertyId(lease.property_id)
-        setRoomId(lease.room_id)
+        const tenant = await getTenantById(lease.tenant_id)
+        setTenantLabel(`${tenant.full_name} (${tenant.phone || '—'})`)
         setStartDate(lease.start_date)
         setEndDate(lease.end_date ?? '')
         setMonthlyRent(String(lease.monthly_rent))
         setSecurityDeposit(String(lease.security_deposit))
         setIsActive(lease.is_active)
+
+        if (lease.room_id) {
+          const room = await getRoomByIdOnly(lease.room_id)
+          const property = await getPropertyById(room.property_id)
+          setAssignmentLabel(`${property.address} · ${room.name}`)
+        } else if (lease.property_id) {
+          const property = await getPropertyById(lease.property_id)
+          setAssignmentLabel(property.address)
+        } else {
+          setAssignmentLabel('—')
+        }
       } catch (loadError) {
         const message = loadError instanceof Error ? loadError.message : 'Error desconocido'
         setError(message)
@@ -120,7 +131,7 @@ export function EditLeasePage() {
               <label className="block text-sm font-medium text-slate-700">Inquilino</label>
               <input
                 type="text"
-                value={tenantId}
+                value={tenantLabel}
                 disabled
                 className="block w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700"
               />
@@ -130,7 +141,7 @@ export function EditLeasePage() {
               <label className="block text-sm font-medium text-slate-700">Asignación</label>
               <input
                 type="text"
-                value={roomId ? `Habitación (${roomId})` : `Piso (${propertyId ?? '—'})`}
+                value={assignmentLabel}
                 disabled
                 className="block w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700"
               />
