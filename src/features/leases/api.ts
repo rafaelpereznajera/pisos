@@ -93,7 +93,7 @@ export async function listActiveLeaseAssignmentsByAssets(
 
   const leasesResponse = await supabase
     .from('leases')
-    .select('id, tenant_id, property_id, room_id, start_date')
+    .select('id, tenant_id, property_id, room_id, start_date, monthly_rent')
     .eq('is_active', true)
     .order('start_date', { ascending: false })
 
@@ -140,6 +140,7 @@ export async function listActiveLeaseAssignmentsByAssets(
       lease_id: lease.id,
       tenant_name: tenant?.full_name ?? 'Inquilino',
       tenant_phone: tenant?.phone ?? null,
+      monthly_rent: lease.monthly_rent,
       property_id: lease.property_id,
       room_id: lease.room_id,
     }
@@ -156,6 +157,7 @@ export async function listActiveLeaseAssignmentsByAssets(
       lease_id: lease.id,
       tenant_name: tenant?.full_name ?? 'Inquilino',
       tenant_phone: tenant?.phone ?? null,
+      monthly_rent: lease.monthly_rent,
       property_id: lease.property_id,
       room_id: lease.room_id,
     }

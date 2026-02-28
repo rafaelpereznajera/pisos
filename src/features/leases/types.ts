@@ -34,6 +34,7 @@ export type ActiveLeaseAssignment = {
   lease_id: string
   tenant_name: string
   tenant_phone: string | null
+  monthly_rent: number
   property_id: string | null
   room_id: string | null
 }

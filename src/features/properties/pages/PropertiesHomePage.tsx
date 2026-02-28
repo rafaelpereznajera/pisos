@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listActiveLeaseAssignmentsByAssets } from '../../leases/api'
 import type { ActiveLeaseAssignment } from '../../leases/types'
+import {
+  createCurrentMonthPaymentForLease,
+  listCurrentMonthPaymentsByLeaseIds,
+} from '../../payments/api'
 import { listProperties, listRoomsByPropertyIds } from '../api'
 import type { Property, Room } from '../types'
 
@@ -15,6 +19,8 @@ export function PropertiesHomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingRooms, setIsLoadingRooms] = useState(false)
   const [isLoadingLeases, setIsLoadingLeases] = useState(false)
+  const [paymentsByLeaseId, setPaymentsByLeaseId] = useState<Record<string, { amount: number }>>({})
+  const [creatingPaymentLeaseId, setCreatingPaymentLeaseId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -88,12 +94,92 @@ export function PropertiesHomePage() {
     void loadActiveLeases()
   }, [properties, roomsByPropertyId])
 
+  useEffect(() => {
+    async function loadCurrentMonthPayments() {
+      const leaseIds = Array.from(
+        new Set([
+          ...Object.values(activeLeaseByPropertyId).map((assignment) => assignment.lease_id),
+          ...Object.values(activeLeaseByRoomId).map((assignment) => assignment.lease_id),
+        ]),
+      )
+
+      if (leaseIds.length === 0) {
+        setPaymentsByLeaseId({})
+        return
+      }
+
+      try {
+        const payments = await listCurrentMonthPaymentsByLeaseIds(leaseIds)
+        const mapped: Record<string, { amount: number }> = {}
+
+        for (const [leaseId, payment] of Object.entries(payments)) {
+          mapped[leaseId] = { amount: payment.amount }
+        }
+
+        setPaymentsByLeaseId(mapped)
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : 'Error desconocido'
+        setError(message)
+      }
+    }
+
+    void loadCurrentMonthPayments()
+  }, [activeLeaseByPropertyId, activeLeaseByRoomId])
+
+  async function handleMarkPaid(assignment: ActiveLeaseAssignment) {
+    try {
+      setCreatingPaymentLeaseId(assignment.lease_id)
+      setError(null)
+      const payment = await createCurrentMonthPaymentForLease(assignment.lease_id, assignment.monthly_rent)
+      setPaymentsByLeaseId((current) => ({
+        ...current,
+        [assignment.lease_id]: { amount: payment.amount },
+      }))
+    } catch (createError) {
+      const message = createError instanceof Error ? createError.message : 'Error desconocido'
+      setError(message)
+    } finally {
+      setCreatingPaymentLeaseId(null)
+    }
+  }
+
   function formatTenant(assignment: ActiveLeaseAssignment | undefined): string {
     if (!assignment) {
       return ''
     }
 
     return `${assignment.tenant_name} (${assignment.tenant_phone || '—'})`
+  }
+
+  function renderPaymentAction(assignment: ActiveLeaseAssignment | undefined) {
+    if (!assignment) {
+      return null
+    }
+
+    const payment = paymentsByLeaseId[assignment.lease_id]
+
+    if (payment) {
+      return (
+        <>
+          <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
+          <span className="text-xs text-emerald-700">Pagado: {payment.amount} €</span>
+        </>
+      )
+    }
+
+    return (
+      <>
+        <span className="text-xs text-slate-600">A pagar: {assignment.monthly_rent} €</span>
+        <button
+          type="button"
+          onClick={() => handleMarkPaid(assignment)}
+          disabled={creatingPaymentLeaseId === assignment.lease_id}
+          className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {creatingPaymentLeaseId === assignment.lease_id ? 'Guardando...' : 'Pagado'}
+        </button>
+      </>
+    )
   }
 
   return (
@@ -150,9 +236,10 @@ export function PropertiesHomePage() {
                     {property.rental_mode === 'entire_property' &&
                       activeLeaseByPropertyId[property.id] &&
                       !isLoadingLeases && (
-                        <p className="mt-1 text-sm text-slate-600">
-                          {formatTenant(activeLeaseByPropertyId[property.id])}
-                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <p className="text-sm text-slate-600">{formatTenant(activeLeaseByPropertyId[property.id])}</p>
+                          {renderPaymentAction(activeLeaseByPropertyId[property.id])}
+                        </div>
                       )}
 
                     {property.rental_mode === 'by_room' && (
@@ -169,10 +256,15 @@ export function PropertiesHomePage() {
                           <ul className="mt-2 space-y-1">
                             {roomsByPropertyId[property.id].map((room) => (
                               <li key={room.id} className="text-sm text-slate-700">
-                                - {room.name}
-                                {activeLeaseByRoomId[room.id] && !isLoadingLeases
-                                  ? ` · ${formatTenant(activeLeaseByRoomId[room.id])}`
-                                  : ''}
+                                <div className="flex items-center gap-2">
+                                  <span>- {room.name}</span>
+                                  {activeLeaseByRoomId[room.id] && !isLoadingLeases && (
+                                    <>
+                                      <span>· {formatTenant(activeLeaseByRoomId[room.id])}</span>
+                                      {renderPaymentAction(activeLeaseByRoomId[room.id])}
+                                    </>
+                                  )}
+                                </div>
                               </li>
                             ))}
                           </ul>
